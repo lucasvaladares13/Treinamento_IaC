@@ -1,0 +1,52 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy to Datalake
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: HashiCorp - Setup Terraform
+        uses: hashicorp/setup-terraform@v1.2.1
+
+      - name: Azure Login
+        uses: Azure/login@v1.4.6
+        with:
+          # Paste output of `az ad sp create-for-rbac` as value of secret variable: AZURE_CREDENTIALS
+          creds: "" # # optional
+          # ClientId of the Azure Service principal created.
+          client-id: "" # optional
+          # TenantId of the Azure Service principal created.
+          tenant-id: "" # optional
+          # Azure subscriptionId
+          subscription-id: ""  # optional
+          # Set this value to true to enable Azure PowerShell Login in addition to Az CLI login
+          enable-AzPSSession: "" # optional
+          # Name of the environment. Supported values are azurecloud, azurestack, azureusgovernment, azurechinacloud, azuregermancloud. Default being azurecloud
+          environment: "" # optional, default is azurecloud
+          # Set this value to true to enable support for accessing tenants without subscriptions
+          allow-no-subscriptions:  "" # optional
+          # Provide audience field for access-token. Default value is api://AzureADTokenExchange
+          audience: "" # optional, default is api://AzureADTokenExchange
+
+      - name: IaC Apply
+        env:
+          COMMAND_IAC: terraform
+        run: |
+          cd Infrastructure
+          $COMMAND_IAC init
+          $COMMAND_IAC validate
+          $COMMAND_IAC plan
+          $COMMAND_IAC apply -auto-approve
+
+          
